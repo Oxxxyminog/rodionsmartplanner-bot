@@ -1,16 +1,30 @@
-from aiogram import Bot, Dispatcher, executor, types
+
+import asyncio
+import logging
 import os
 from dotenv import load_dotenv
+from aiogram import Bot, Dispatcher
+from aiogram.enums import ParseMode
+from aiogram.client.default import DefaultBotProperties
+
+from bot.handlers import router
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
+async def main():
+    logging.basicConfig(level=logging.INFO)
 
-@dp.message_handler(commands=['start'])
-async def send_welcome(message: types.Message):
-    await message.answer("Привет! Я SmartPlannerBot. Готов помогать с твоим расписанием 📅")
+    bot = Bot(
+        token=BOT_TOKEN,
+        default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN)
+    )
 
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+    dp = Dispatcher()
+    dp.include_router(router)
+
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
